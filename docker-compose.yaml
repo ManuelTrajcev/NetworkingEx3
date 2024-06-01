@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile-server
+    ports:
+      - "7000:7000"
+    networks:
+      - server-logger-network
+      - server-client-network
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile-server
+    environment:
+      - SERVER_NAME=server
+      - SERVER_PORT=7000
+    deploy:
+      replicas: 15
+    depends_on:
+      - server
+      - logger
+    networks:
+      - server-client-network
+  logger:
+    build:
+      context: .
+      dockerfile: Dockerfile-server
+    ports:
+      - "7070:7070"
+    environment:
+      - SERVER_PORT=7070
+      - logFile=/usr/data/logger-files/log.txt
+      - counterFile=/usr/data/logger-files/counter.bin
+    networks:
+      - server-logger-network
+    volumes:
+      - /data/logger-files/:/usr/data/logger-files/
+
+networks:
+  server-logger-network:
+    driver: bridge
+  server-client-network:
+    driver: bridge
